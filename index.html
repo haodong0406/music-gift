@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>像风一样 - 薛之谦</title>
+    <style>
+        :root {
+            --primary-color: #ff4e50;
+            --bg-gradient: linear-gradient(135deg, #1e2a78 0%, #ff4e50 100%);
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: var(--bg-gradient);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        .player-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .album-art {
+            width: 80vw;
+            height: 80vw;
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 25px;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .song-info {
+            margin-bottom: 30px;
+        }
+        .song-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+        .artist {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="player-container">
+        <div class="album-art" id="albumArt" style="background-image: url('https://music-gift.oss-cn-hangzhou.aliyuncs.com/IMG_20250529_113824.jpg')"></div>
+        <div class="song-info">
+            <h1 class="song-title">像风一样</h1>
+            <p class="artist">薛之谦</p>
+        </div>
+        <button id="playBtn" class="hidden"></button>
+    </div>
+
+    <audio id="audioPlayer" autoplay>
+        <source src="https://music-gift.oss-cn-hangzhou.aliyuncs.com/%E8%96%9B%E4%B9%8B%E8%B0%A6%20-%20%E5%83%8F%E9%A3%8E%E4%B8%80%E6%A0%B7.flac" type="audio/flac">
+        您的浏览器不支持音频播放
+    </audio>
+
+    <script>
+        // 元素获取
+        const audio = document.getElementById('audioPlayer');
+        const playBtn = document.getElementById('playBtn');
+        const albumArt = document.getElementById('albumArt');
+        const loading = document.getElementById('loading');
+        
+        // 预加载封面图
+        const coverImg = new Image();
+        coverImg.src = 'https://music-gift.oss-cn-hangzhou.aliyuncs.com/IMG_20250529_113824.jpg';
+        coverImg.onload = function() {
+            loading.style.display = 'none';
+        };
+
+        // 自动播放处理
+        function attemptAutoPlay() {
+            audio.volume = 0.9;
+            
+            // 解决iOS自动播放限制
+            audio.muted = true;
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // 播放成功后再取消静音
+                    audio.muted = false;
+                }).catch(error => {
+                    // 显示透明播放按钮
+                    playBtn.classList.remove('hidden');
+                });
+            }
+        }
+        
+        // 页面加载后尝试播放
+        document.addEventListener('DOMContentLoaded', function() {
+            // 延迟播放避免拦截
+            setTimeout(attemptAutoPlay, 800);
+        });
+        
+        // 点击播放按钮处理
+        playBtn.addEventListener('click', function() {
+            audio.play();
+            this.classList.add('hidden');
+        });
+        
+        // 播放状态同步
+        audio.addEventListener('playing', function() {
+            document.title = "▶ 像风一样 - 薛之谦";
+        });
+        
+        // 缓冲处理
+        audio.addEventListener('waiting', function() {
+            loading.style.display = 'flex';
+        });
+        
+        audio.addEventListener('canplay', function() {
+            loading.style.display = 'none';
+        });
+        
+        // 错误处理
+        audio.addEventListener('error', function() {
+            loading.innerHTML = '<p>加载失败，请检查网络</p>';
+        });
+    </script>
+</body>
+</html>
